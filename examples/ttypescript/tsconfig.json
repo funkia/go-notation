@@ -1,0 +1,7 @@
+{
+  "compilerOptions": {
+    "plugins": [{ "transform": "../../src/transform.ts" }],
+    "outDir": "./dist",
+    "rootDir": "./src"
+  }
+}
