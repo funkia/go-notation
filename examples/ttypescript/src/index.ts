@@ -1,4 +1,4 @@
-import { go } from "../../../";
+import { go } from "go-notation";
 
 class Maybe<A> {
   constructor(private value: A) {}
@@ -7,27 +7,39 @@ class Maybe<A> {
   }
 }
 
-function test0() {
+function simple() {
   return go(bind => {
     const a = bind(new Maybe(12));
-    const b = bind(new Maybe("horse"));
-    const c = bind(new Maybe(2)) + bind(new Maybe(12));
-    return new Maybe(a.toString() + b + c);
+    return new Maybe(a * 2);
   });
 }
-
-function test1() {
-  return new Maybe(12).flatMap(a => {
-    return new Maybe("horse").flatMap(b => {
-      return new Maybe(2).flatMap(temp => {
-        return new Maybe(12).flatMap(temp2 => {
-          const c = temp + temp2;
-          return new Maybe(a.toString() + b + c);
-        });
-      });
-    });
-  });
+function simpleRes() {
+  return new Maybe(12).flatMap(a => new Maybe(a * 2));
 }
+simple();
+simpleRes();
 
-test0();
-test1();
+// function test0() {
+//   return go(bind => {
+//     const a = bind(new Maybe(12));
+//     const b = bind(new Maybe("horse"));
+//     const c = bind(new Maybe(2)) + bind(new Maybe(12));
+//     return new Maybe(a.toString() + b + c);
+//   });
+// }
+
+// function test1() {
+//   return new Maybe(12).flatMap(a => {
+//     return new Maybe("horse").flatMap(b => {
+//       return new Maybe(2).flatMap(temp => {
+//         return new Maybe(12).flatMap(temp2 => {
+//           const c = temp + temp2;
+//           return new Maybe(a.toString() + b + c);
+//         });
+//       });
+//     });
+//   });
+// }
+
+// test0();
+// test1();

@@ -3,6 +3,6 @@
     "ttypescript": "^1.5.5"
   },
   "scripts": {
-    "run": "ttsc"
+    "start": "ttsc"
   }
 }

@@ -2,6 +2,9 @@
   "compilerOptions": {
     "plugins": [{ "transform": "../../src/transform.ts" }],
     "outDir": "./dist",
-    "rootDir": "./src"
+    "baseUrl": "./src",
+    "paths": {
+      "go-notation": ["../../../src"]
+    }
   }
 }
