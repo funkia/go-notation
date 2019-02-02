@@ -1,13 +1,13 @@
 interface FlatMap<A> {
-  flatMap<B>(f: (a: A) => FlatMap<B>): FlatMap<B>;
+  flatMap(f: (a: A) => FlatMap<any>): FlatMap<any>;
 }
 
 type FlatMapValue<M> = M extends FlatMap<infer A> ? A : never;
 
-function bind<A, M extends FlatMap<A>>(a: M): FlatMapValue<M> {
+function bind<M extends FlatMap<any>>(a: M): FlatMapValue<M> {
   return 0 as any;
 }
 
-export function go<A, M extends FlatMap<A>>(f: (b: typeof bind) => M): M {
+export function go<A extends FlatMap<any>>(f: (b: typeof bind) => A): A {
   return undefined as any;
 }

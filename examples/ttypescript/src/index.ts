@@ -10,6 +10,7 @@ class Maybe<A> {
 function simple() {
   return go(bind => {
     const a = bind(new Maybe(12));
+    const b = bind(new Maybe(42));
     return new Maybe(a * 2);
   });
 }
