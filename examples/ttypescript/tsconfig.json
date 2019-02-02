@@ -3,6 +3,7 @@
     "plugins": [{ "transform": "../../src/transform.ts" }],
     "outDir": "./dist",
     "baseUrl": "./src",
+    "lib": ["esnext"],
     "paths": {
       "@funkia/go-notation": ["../../../src"]
     }
