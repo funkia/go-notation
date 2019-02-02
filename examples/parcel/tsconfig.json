@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "lib": ["esnext"],
+    "plugins": [{ "transform": "../../src/transform.ts" }],
+    "outDir": "./dist",
+    "baseUrl": "./src",
+    "paths": {
+      "go-notation": ["../../../src"]
+    }
+  }
+}
