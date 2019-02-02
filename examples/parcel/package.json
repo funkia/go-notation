@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "go-notation": "file:../.."
+    "@funkia/go-notation": "file:../.."
   },
   "scripts": {
     "start": "parcel index.html"

@@ -1,4 +1,4 @@
-import { go } from "go-notation";
+import { go } from "@funkia/go-notation";
 
 class Maybe<A> {
   constructor(private value: A) {}

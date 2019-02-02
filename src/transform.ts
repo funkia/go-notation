@@ -9,7 +9,7 @@ export default function transformer(): ts.TransformerFactory<ts.SourceFile> {
         return visitGoBody(<ts.CallExpression>node);
       } else if (ts.isImportDeclaration(node)) {
         const mod = node.moduleSpecifier.getText().slice(1, -1);
-        if (mod === "go-notation") {
+        if (mod === "@funkia/go-notation") {
           return undefined;
         }
       }

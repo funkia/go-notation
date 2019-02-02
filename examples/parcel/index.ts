@@ -1,4 +1,4 @@
-import { go } from "go-notation";
+import { go } from "@funkia/go-notation";
 
 const numbers = go(bind => {
   const n = bind([1, 2, 3]);

@@ -5,7 +5,7 @@
     "outDir": "./dist",
     "baseUrl": "./src",
     "paths": {
-      "go-notation": ["../../../src"]
+      "@funkia/go-notation": ["../../../src"]
     }
   }
 }
