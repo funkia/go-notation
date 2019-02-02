@@ -6,7 +6,9 @@
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    "declaration": true
+    "declaration": true,
+    "lib": ["esnext"],
+    "plugins": [{ "transform": "./src/index.ts" }]
   },
   "include": ["src/**/*", "test/**/*"],
   "exclude": ["node_modules"]

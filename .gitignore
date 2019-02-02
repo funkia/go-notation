@@ -2,3 +2,5 @@ node_modules
 dist
 .direnv/
 .envrc
+coverage
+.nyc_output
