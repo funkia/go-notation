@@ -13,42 +13,36 @@ export default function transformer(): ts.TransformerFactory<ts.SourceFile> {
       }
       return ts.visitEachChild(node, visitor, context);
     }
-  };
-}
 
-function visitImportDeclaration(node: ts.ImportDeclaration) {
-  return node.moduleSpecifier.getText().slice(1, -1) === "@funkia/go-notation"
-    ? undefined
-    : node;
-}
-
-function visitCallExpression(node: ts.CallExpression) {
-  if (node.expression.getText() === "go") {
-    const arg0 = node.arguments[0];
-    switch (arg0.kind) {
-      case ts.SyntaxKind.FunctionExpression: {
-        const bindName = arg0.getChildAt(2).getText();
-        const statements = arg0
-          .getChildAt(4)
-          .getChildAt(1)
-          .getChildren() as ts.Statement[];
-        return immediatelyInvokedFunction(
-          ts.createBlock(visitGoBody(bindName, statements))
-        );
+    function visitCallExpression(node: ts.CallExpression) {
+      if (node.expression.getText() === "go") {
+        const arg0 = node.arguments[0];
+        switch (arg0.kind) {
+          case ts.SyntaxKind.FunctionExpression: {
+            const bindName = arg0.getChildAt(2).getText();
+            const statements = arg0
+              .getChildAt(4)
+              .getChildAt(1)
+              .getChildren() as ts.Statement[];
+            return immediatelyInvokedFunction(
+              ts.createBlock(visitGoBody(bindName, statements))
+            );
+          }
+          case ts.SyntaxKind.ArrowFunction: {
+            const bindName = arg0.getChildAt(0).getText();
+            const statements = arg0
+              .getChildAt(2)
+              .getChildAt(1)
+              .getChildren() as ts.Statement[];
+            return immediatelyInvokedFunction(
+              ts.createBlock(visitGoBody(bindName, statements))
+            );
+          }
+        }
       }
-      case ts.SyntaxKind.ArrowFunction: {
-        const bindName = arg0.getChildAt(0).getText();
-        const statements = arg0
-          .getChildAt(2)
-          .getChildAt(1)
-          .getChildren() as ts.Statement[];
-        return immediatelyInvokedFunction(
-          ts.createBlock(visitGoBody(bindName, statements))
-        );
-      }
+      return ts.visitEachChild(node, visitor, context);
     }
-  }
-  return node;
+  };
 }
 
 function visitGoBody(
@@ -102,6 +96,12 @@ function visitGoBody(
   } else {
     return statements;
   }
+}
+
+function visitImportDeclaration(node: ts.ImportDeclaration) {
+  return node.moduleSpecifier.getText().slice(1, -1) === "@funkia/go-notation"
+    ? undefined
+    : node;
 }
 
 function immediatelyInvokedFunction(block: ts.Block) {
