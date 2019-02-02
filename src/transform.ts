@@ -26,18 +26,26 @@ function visitCallExpression(node: ts.CallExpression) {
   if (node.expression.getText() === "go") {
     const arg0 = node.arguments[0];
     switch (arg0.kind) {
-      case ts.SyntaxKind.FunctionExpression:
-        // TODO
-        break;
-      case ts.SyntaxKind.ArrowFunction:
-        const bindName = arg0.getChildAt(0).getText();
+      case ts.SyntaxKind.FunctionExpression: {
+        const bindName = arg0.getChildAt(2).getText();
         const statements = arg0
-          .getChildAt(2)
-          .getChildren()[1]
+          .getChildAt(4)
+          .getChildAt(1)
           .getChildren() as ts.Statement[];
         return immediatelyInvokedFunction(
           ts.createBlock(visitGoBody(bindName, statements))
         );
+      }
+      case ts.SyntaxKind.ArrowFunction: {
+        const bindName = arg0.getChildAt(0).getText();
+        const statements = arg0
+          .getChildAt(2)
+          .getChildAt(1)
+          .getChildren() as ts.Statement[];
+        return immediatelyInvokedFunction(
+          ts.createBlock(visitGoBody(bindName, statements))
+        );
+      }
     }
   }
   return node;
