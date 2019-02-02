@@ -7,6 +7,11 @@ export default function transformer(): ts.TransformerFactory<ts.SourceFile> {
     function visitor(node: ts.Node): ts.VisitResult<ts.Node> {
       if (ts.isCallExpression(node) && node.expression.getText() === "go") {
         return visitGoBody(<ts.CallExpression>node);
+      } else if (ts.isImportDeclaration(node)) {
+        const mod = node.moduleSpecifier.getText().slice(1, -1);
+        if (mod === "go-notation") {
+          return undefined;
+        }
       }
       return ts.visitEachChild(node, visitor, context);
     }
