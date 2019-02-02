@@ -17,7 +17,7 @@ export default function transformer(): ts.TransformerFactory<ts.SourceFile> {
 }
 
 function visitImportDeclaration(node: ts.ImportDeclaration) {
-  return node.moduleSpecifier.getText().slice(1, -1) === "go-notation"
+  return node.moduleSpecifier.getText().slice(1, -1) === "@funkia/go-notation"
     ? undefined
     : node;
 }

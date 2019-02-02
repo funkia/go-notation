@@ -1,5 +1,5 @@
 {
-  "name": "@funkia/go",
+  "name": "@funkia/go-notation",
   "version": "0.0.1",
   "description": "Type-safe do-notation",
   "main": "dist/index.js",
@@ -15,7 +15,7 @@
   "author": "Funkia",
   "license": "MIT",
   "dependencies": {
-    "typescript": "^3.2.2"
+    "typescript": "^3.3.1"
   },
   "prettier": {}
 }

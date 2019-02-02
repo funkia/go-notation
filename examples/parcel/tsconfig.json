@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "lib": ["esnext"],
+    "plugins": [{ "transform": "@funkia/go-notation" }],
+    "outDir": "./dist",
+    "baseUrl": "./src"
+  }
+}

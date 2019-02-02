@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "@funkia/go-notation": "file:../.."
+  },
+  "scripts": {
+    "start": "parcel index.html"
+  },
+  "devDependencies": {
+    "parcel-bundler": "^1.11.0",
+    "parcel-plugin-ttypescript": "^1.0.1",
+    "ttypescript": "^1.5.6"
+  }
+}
