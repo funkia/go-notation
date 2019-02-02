@@ -1,11 +1,8 @@
 {
   "compilerOptions": {
     "lib": ["esnext"],
-    "plugins": [{ "transform": "../../src/transform.ts" }],
+    "plugins": [{ "transform": "@funkia/go-notation" }],
     "outDir": "./dist",
-    "baseUrl": "./src",
-    "paths": {
-      "@funkia/go-notation": ["../../../src"]
-    }
+    "baseUrl": "./src"
   }
 }

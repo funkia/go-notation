@@ -1,3 +1,5 @@
+import transformer from "./transform";
+
 interface FlatMap<A> {
   flatMap(f: (a: A) => FlatMap<any>): FlatMap<any>;
 }
@@ -11,3 +13,5 @@ function bind<M extends FlatMap<any>>(a: M): FlatMapValue<M> {
 export function go<A extends FlatMap<any>>(f: (b: typeof bind) => A): A {
   return undefined as any;
 }
+
+export default transformer;
