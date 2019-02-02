@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.org/funkia/go-notation.svg?branch=master)](https://travis-ci.org/funkia/go-notation)
+[![codecov](https://codecov.io/gh/funkia/go-notation/branch/master/graph/badge.svg)](https://codecov.io/gh/funkia/go-notation)
+[![Gitter](https://img.shields.io/gitter/room/funkia/General.svg)](https://gitter.im/funkia/General)
+
 # go-notation
 
 Type-safe do-notation for TypeScript.
