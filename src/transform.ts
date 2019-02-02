@@ -5,44 +5,48 @@ export default function transformer(): ts.TransformerFactory<ts.SourceFile> {
     return (file: ts.SourceFile) => ts.visitEachChild(file, visitor, context);
 
     function visitor(node: ts.Node): ts.VisitResult<ts.Node> {
-      if (ts.isCallExpression(node) && node.expression.getText() === "go") {
-        return visitGoBody(<ts.CallExpression>node);
-      } else if (ts.isImportDeclaration(node)) {
-        const mod = node.moduleSpecifier.getText().slice(1, -1);
-        if (mod === "go-notation") {
-          return undefined;
-        }
+      switch (node.kind) {
+        case ts.SyntaxKind.CallExpression:
+          return visitCallExpression(<ts.CallExpression>node);
+        case ts.SyntaxKind.ImportDeclaration:
+          return visitImportDeclaration(<ts.ImportDeclaration>node);
       }
       return ts.visitEachChild(node, visitor, context);
     }
   };
 }
 
-function visitGoBody(node: ts.CallExpression) {
-  const arg0 = node.arguments[0];
-  if (ts.isArrowFunction(arg0)) {
-    const statements = arg0
-      .getChildAt(2)
-      .getChildren()[1]
-      .getChildren() as ts.Statement[];
-
-    return ts.createCall(
-      ts.createFunctionExpression(
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        [],
-        undefined,
-        ts.createBlock(visitBinds(statements))
-      ),
-      undefined,
-      undefined
-    );
-  }
+function visitImportDeclaration(node: ts.ImportDeclaration) {
+  return node.moduleSpecifier.getText().slice(1, -1) === "go-notation"
+    ? undefined
+    : node;
 }
 
-function visitBinds(statements: ts.Statement[]): ts.Statement[] {
+function visitCallExpression(node: ts.CallExpression) {
+  if (node.expression.getText() === "go") {
+    const arg0 = node.arguments[0];
+    switch (arg0.kind) {
+      case ts.SyntaxKind.FunctionExpression:
+        // TODO
+        break;
+      case ts.SyntaxKind.ArrowFunction:
+        const bindName = arg0.getChildAt(0).getText();
+        const statements = arg0
+          .getChildAt(2)
+          .getChildren()[1]
+          .getChildren() as ts.Statement[];
+        return immediatelyInvokedFunction(
+          ts.createBlock(visitGoBody(bindName, statements))
+        );
+    }
+  }
+  return node;
+}
+
+function visitGoBody(
+  bindName: string,
+  statements: ts.Statement[]
+): ts.Statement[] {
   const i = statements.findIndex(s => {
     if (ts.isVariableStatement(s)) {
       const body = s
@@ -51,7 +55,7 @@ function visitBinds(statements: ts.Statement[]): ts.Statement[] {
         .getChildren()[0];
       if (ts.isVariableDeclaration(body)) {
         const exp = body.getChildAt(2);
-        if (ts.isCallExpression(exp) && exp.expression.getText() === "bind") {
+        if (ts.isCallExpression(exp) && exp.expression.getText() === bindName) {
           return true;
         }
       }
@@ -77,7 +81,7 @@ function visitBinds(statements: ts.Statement[]): ts.Statement[] {
       [ts.createParameter(undefined, undefined, undefined, identifier)],
       undefined,
       undefined,
-      ts.createBlock(visitBinds(right), true)
+      ts.createBlock(visitGoBody(bindName, right), true)
     );
     body.pos = 196;
     return left.concat([
@@ -90,4 +94,20 @@ function visitBinds(statements: ts.Statement[]): ts.Statement[] {
   } else {
     return statements;
   }
+}
+
+function immediatelyInvokedFunction(block: ts.Block) {
+  return ts.createCall(
+    ts.createFunctionExpression(
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      [],
+      undefined,
+      block
+    ),
+    undefined,
+    undefined
+  );
 }
