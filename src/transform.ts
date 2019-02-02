@@ -54,46 +54,82 @@ export default function transformer(): ts.TransformerFactory<ts.SourceFile> {
       bindName: string,
       statements: ts.Statement[]
     ): ts.Statement[] {
-      const i = statements.findIndex(s => {
-        if (ts.isVariableStatement(s)) {
-          const body = s
-            .getChildren()[0]
-            .getChildren()[1]
-            .getChildren()[0];
-          if (ts.isVariableDeclaration(body)) {
-            const exp = body.getChildAt(2);
-            if (
-              ts.isCallExpression(exp) &&
-              exp.expression.getText() === bindName
-            ) {
-              return true;
+      let cur = statements.shift();
+      let pre: ts.Statement[] = [];
+      while (cur !== undefined) {
+        switch (cur.kind) {
+          case ts.SyntaxKind.VariableStatement:
+            const line = cur
+              .getChildAt(0)
+              .getChildAt(1)
+              .getChildAt(0);
+            const identifier = line.getChildAt(0) as ts.Identifier;
+            const exp = visitBindLine(bindName, <ts.Expression>(
+              line.getChildAt(2)
+            ));
+            if (exp !== undefined) {
+              pre.push(
+                ts.createReturn(
+                  createFlatMapCall(
+                    exp,
+                    identifier,
+                    ts.createBlock(visitGoBody(bindName, statements), true)
+                  )
+                )
+              );
+              return pre;
             }
-          }
+          default:
+            pre.push(cur);
         }
-        return false;
-      });
-
-      if (i > -1) {
-        const left = statements.slice(0, i);
-        const right = statements.slice(i + 1);
-        const bind = statements[i];
-        const line = bind
-          .getChildren()[0]
-          .getChildren()[1]
-          .getChildren()[0];
-        const val = line.getChildAt(2)! as ts.CallExpression;
-        const identifier = line.getChildAt(0) as ts.Identifier;
-        left.push(
-          createFlatMapCall(
-            val.arguments[0],
-            identifier,
-            ts.createBlock(visitGoBody(bindName, right))
-          )
-        );
-        return left;
-      } else {
-        return statements;
+        cur = statements.shift();
       }
+      return pre;
+    }
+
+    function visitBindLine(
+      bindName: string,
+      exp: ts.Expression
+    ): ts.Expression | undefined {
+      switch (exp.kind) {
+        case ts.SyntaxKind.CallExpression:
+          if ((<ts.CallExpression>exp).expression.getText() === bindName) {
+            return (<ts.CallExpression>exp).arguments[0];
+          }
+        case ts.SyntaxKind.BinaryExpression:
+          const left = visitBindLine(bindName, exp.getChildAt(
+            0
+          ) as ts.Expression);
+          const right = visitBindLine(bindName, exp.getChildAt(
+            2
+          ) as ts.Expression);
+          if (left !== undefined && right !== undefined) {
+            const leftId = ts.createUniqueName("bind");
+            const rightId = ts.createUniqueName("bind");
+            return createFlatMapCall(
+              left,
+              leftId,
+              ts.createBlock([
+                ts.createReturn(
+                  createFlatMapCall(
+                    right,
+                    rightId,
+                    ts.createBlock([
+                      ts.createReturn(
+                        ts.updateBinary(
+                          <ts.BinaryExpression>exp,
+                          leftId,
+                          rightId
+                        )
+                      )
+                    ])
+                  )
+                )
+              ])
+            );
+          }
+      }
+      return undefined;
     }
   };
 }
@@ -103,18 +139,16 @@ function createFlatMapCall(
   argName: ts.Identifier,
   body: ts.Block
 ) {
-  return ts.createReturn(
-    ts.createCall(ts.createPropertyAccess(exp, "flatMap"), undefined, [
-      ts.createArrowFunction(
-        undefined,
-        undefined,
-        [ts.createParameter(undefined, undefined, undefined, argName)],
-        undefined,
-        undefined,
-        body
-      )
-    ])
-  );
+  return ts.createCall(ts.createPropertyAccess(exp, "flatMap"), undefined, [
+    ts.createArrowFunction(
+      undefined,
+      undefined,
+      [ts.createParameter(undefined, undefined, undefined, argName)],
+      undefined,
+      undefined,
+      body
+    )
+  ]);
 }
 
 function createImmediatelyInvokedFunction(block: ts.Block) {

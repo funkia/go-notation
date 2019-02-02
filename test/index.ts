@@ -28,4 +28,11 @@ describe("go-notation", () => {
     });
     assert.deepEqual(array, [1, 3, 1, 4, 2, 3, 2, 4]);
   });
+  it("handles binary expressions", () => {
+    const array = go(bind => {
+      const a = bind([1, 2]) + bind([3, 4]);
+      return [a];
+    });
+    assert.deepEqual(array, [4, 5, 5, 6]);
+  });
 });
