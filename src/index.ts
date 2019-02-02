@@ -11,7 +11,9 @@ function bind<M extends FlatMap<any>>(a: M): FlatMapValue<M> {
 }
 
 export function go<A extends FlatMap<any>>(f: (b: typeof bind) => A): A {
-  return undefined as any;
+  throw new Error(
+    "go should never be called at run-time. Ensure that you have configured go-notation correctly."
+  );
 }
 
 export default transformer;
