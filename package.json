@@ -46,6 +46,12 @@
       "ts-node/register",
       "source-map-support/register"
     ],
+    "include": [
+      "src/"
+    ],
+    "exclude": [
+      "src/index.ts"
+    ],
     "reporter": [
       "json",
       "html",
