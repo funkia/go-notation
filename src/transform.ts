@@ -14,6 +14,13 @@ export default function transformer(): ts.TransformerFactory<ts.SourceFile> {
       return ts.visitEachChild(node, visitor, context);
     }
 
+    function visitImportDeclaration(node: ts.ImportDeclaration) {
+      return node.moduleSpecifier.getText().slice(1, -1) ===
+        "@funkia/go-notation"
+        ? undefined
+        : node;
+    }
+
     function visitCallExpression(node: ts.CallExpression) {
       if (node.expression.getText() === "go") {
         const arg0 = node.arguments[0];
@@ -24,7 +31,7 @@ export default function transformer(): ts.TransformerFactory<ts.SourceFile> {
               .getChildAt(4)
               .getChildAt(1)
               .getChildren() as ts.Statement[];
-            return immediatelyInvokedFunction(
+            return createImmediatelyInvokedFunction(
               ts.createBlock(visitGoBody(bindName, statements))
             );
           }
@@ -34,7 +41,7 @@ export default function transformer(): ts.TransformerFactory<ts.SourceFile> {
               .getChildAt(2)
               .getChildAt(1)
               .getChildren() as ts.Statement[];
-            return immediatelyInvokedFunction(
+            return createImmediatelyInvokedFunction(
               ts.createBlock(visitGoBody(bindName, statements))
             );
           }
@@ -42,69 +49,75 @@ export default function transformer(): ts.TransformerFactory<ts.SourceFile> {
       }
       return ts.visitEachChild(node, visitor, context);
     }
+
+    function visitGoBody(
+      bindName: string,
+      statements: ts.Statement[]
+    ): ts.Statement[] {
+      const i = statements.findIndex(s => {
+        if (ts.isVariableStatement(s)) {
+          const body = s
+            .getChildren()[0]
+            .getChildren()[1]
+            .getChildren()[0];
+          if (ts.isVariableDeclaration(body)) {
+            const exp = body.getChildAt(2);
+            if (
+              ts.isCallExpression(exp) &&
+              exp.expression.getText() === bindName
+            ) {
+              return true;
+            }
+          }
+        }
+        return false;
+      });
+
+      if (i > -1) {
+        const left = statements.slice(0, i);
+        const right = statements.slice(i + 1);
+        const bind = statements[i];
+        const line = bind
+          .getChildren()[0]
+          .getChildren()[1]
+          .getChildren()[0];
+        const val = line.getChildAt(2)! as ts.CallExpression;
+        const identifier = line.getChildAt(0) as ts.Identifier;
+        left.push(
+          createFlatMapCall(
+            val.arguments[0],
+            identifier,
+            ts.createBlock(visitGoBody(bindName, right))
+          )
+        );
+        return left;
+      } else {
+        return statements;
+      }
+    }
   };
 }
 
-function visitGoBody(
-  bindName: string,
-  statements: ts.Statement[]
-): ts.Statement[] {
-  const i = statements.findIndex(s => {
-    if (ts.isVariableStatement(s)) {
-      const body = s
-        .getChildren()[0]
-        .getChildren()[1]
-        .getChildren()[0];
-      if (ts.isVariableDeclaration(body)) {
-        const exp = body.getChildAt(2);
-        if (ts.isCallExpression(exp) && exp.expression.getText() === bindName) {
-          return true;
-        }
-      }
-    }
-    return false;
-  });
-
-  if (i > -1) {
-    const left = statements.slice(0, i);
-    const right = statements.slice(i + 1);
-    const bind = statements[i];
-    const line = bind
-      .getChildren()[0]
-      .getChildren()[1]
-      .getChildren()[0];
-    const exp: ts.CallExpression = line.getChildAt(2) as any;
-
-    const identifier = line.getChildAt(0) as ts.Identifier;
-    const val = exp.arguments[0];
-    const body = ts.createArrowFunction(
-      undefined,
-      undefined,
-      [ts.createParameter(undefined, undefined, undefined, identifier)],
-      undefined,
-      undefined,
-      ts.createBlock(visitGoBody(bindName, right), true)
-    );
-    body.pos = 196;
-    return left.concat([
-      ts.createReturn(
-        ts.createCall(ts.createPropertyAccess(val, "flatMap"), undefined, [
-          body
-        ])
+function createFlatMapCall(
+  exp: ts.Expression,
+  argName: ts.Identifier,
+  body: ts.Block
+) {
+  return ts.createReturn(
+    ts.createCall(ts.createPropertyAccess(exp, "flatMap"), undefined, [
+      ts.createArrowFunction(
+        undefined,
+        undefined,
+        [ts.createParameter(undefined, undefined, undefined, argName)],
+        undefined,
+        undefined,
+        body
       )
-    ]);
-  } else {
-    return statements;
-  }
+    ])
+  );
 }
 
-function visitImportDeclaration(node: ts.ImportDeclaration) {
-  return node.moduleSpecifier.getText().slice(1, -1) === "@funkia/go-notation"
-    ? undefined
-    : node;
-}
-
-function immediatelyInvokedFunction(block: ts.Block) {
+function createImmediatelyInvokedFunction(block: ts.Block) {
   return ts.createCall(
     ts.createFunctionExpression(
       undefined,
