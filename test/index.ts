@@ -12,6 +12,15 @@ describe("go-notation", () => {
     });
     assert.deepEqual(array, [1, 3, 1, 4, 2, 3, 2, 4]);
   });
+  it("handles arrow function with parentheses", () => {
+    // prettier-ignore
+    const array = go((bind) => {
+      const a = bind([1, 2]);
+      const b = bind([3, 4]);
+      return [a, b];
+    });
+    assert.deepEqual(array, [1, 3, 1, 4, 2, 3, 2, 4]);
+  });
   it("supports custom bind name", () => {
     const array = go(foobar => {
       const a = foobar([1, 2]);

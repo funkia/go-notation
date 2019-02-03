@@ -24,27 +24,23 @@ export default function transformer(): ts.TransformerFactory<ts.SourceFile> {
     function visitCallExpression(node: ts.CallExpression) {
       if (node.expression.getText() === "go") {
         const arg0 = node.arguments[0];
-        switch (arg0.kind) {
-          case ts.SyntaxKind.FunctionExpression: {
-            const bindName = arg0.getChildAt(2).getText();
-            const statements = arg0
-              .getChildAt(4)
-              .getChildAt(1)
-              .getChildren() as ts.Statement[];
-            return createImmediatelyInvokedFunction(
-              ts.createBlock(visitGoBody(bindName, statements))
-            );
-          }
-          case ts.SyntaxKind.ArrowFunction: {
-            const bindName = arg0.getChildAt(0).getText();
-            const statements = arg0
-              .getChildAt(2)
-              .getChildAt(1)
-              .getChildren() as ts.Statement[];
-            return createImmediatelyInvokedFunction(
-              ts.createBlock(visitGoBody(bindName, statements))
-            );
-          }
+        if (ts.isFunctionExpression(arg0)) {
+          const bindName = arg0.getChildAt(2).getText();
+          const statements = arg0
+            .getChildAt(4)
+            .getChildAt(1)
+            .getChildren() as ts.Statement[];
+          return createImmediatelyInvokedFunction(
+            ts.createBlock(visitGoBody(bindName, statements))
+          );
+        } else if (ts.isArrowFunction(arg0)) {
+          const bindName = arg0.parameters[0].getText();
+          const statements = arg0.body
+            .getChildAt(1)
+            .getChildren() as ts.Statement[];
+          return createImmediatelyInvokedFunction(
+            ts.createBlock(visitGoBody(bindName, statements))
+          );
         }
       }
       return ts.visitEachChild(node, visitor, context);
