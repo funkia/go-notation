@@ -3,8 +3,12 @@
   "version": "0.0.2",
   "description": "Type-safe do-notation",
   "main": "dist/index.js",
+  "module": "dist/es/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "npm run build-es6; npm run build-cmjs",
+    "build-es6": "tsc -P ./tsconfig-release.json --outDir 'dist/es' --target es2015 --module es2015",
+    "build-cmjs": "tsc -P ./tsconfig-release.json",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run clean; npm run build",
     "release": "np",

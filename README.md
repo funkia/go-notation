@@ -117,7 +117,7 @@ Then add the following to your `tsconfig.json`.
  {
      "compilerOptions": {
 +        "plugins": [
-+            { "transform": "@funkia/do-notation" },
++            { "transform": "@funkia/do-notation" }
 +        ]
      }
  }
