@@ -28,6 +28,18 @@ describe("go-notation", () => {
     });
     assert.deepEqual(array, [1, 3, 1, 4, 2, 3, 2, 4]);
   });
+  it("does not mess with non-bind", () => {
+    function foo(a: number) {
+      return a;
+    }
+    const array = go(function(foobar) {
+      const a = foobar([1, 2]);
+      const b = 3;
+      const c = foo(2);
+      return [a, b, c];
+    });
+    assert.deepEqual(array, [1, 3, 2, 2, 3, 2]);
+  });
   // it("handles binary expressions", () => {
   //   const array = go(bind => {
   //     const a = bind([1, 2]) + bind([3, 4]);

@@ -90,15 +90,17 @@ export default function transformer(): ts.TransformerFactory<ts.SourceFile> {
     ): ts.Statement[] | undefined {
       switch (exp.kind) {
         case ts.SyntaxKind.CallExpression:
-          return [
-            ts.createReturn(
-              createFlatMapCall(
-                (<ts.CallExpression>exp).arguments[0],
-                identifier,
-                ts.createBlock(visitGoBody(bindName, rest))
+          if ((<ts.CallExpression>exp).expression.getText() === bindName) {
+            return [
+              ts.createReturn(
+                createFlatMapCall(
+                  (<ts.CallExpression>exp).arguments[0],
+                  identifier,
+                  ts.createBlock(visitGoBody(bindName, rest))
+                )
               )
-            )
-          ];
+            ];
+          }
         default:
           return undefined;
       }
