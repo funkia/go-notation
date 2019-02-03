@@ -44,26 +44,16 @@ export default function transformer(): ts.TransformerFactory<ts.SourceFile> {
       let cur = statements.shift();
       let pre: ts.Statement[] = [];
       while (cur !== undefined) {
-        switch (cur.kind) {
-          case ts.SyntaxKind.VariableStatement:
-            const line = cur
-              .getChildAt(0)
-              .getChildAt(1)
-              .getChildAt(0);
-            const identifier = line.getChildAt(0) as ts.Identifier;
-            const exp = <ts.Expression>line.getChildAt(2);
-            const next = visitGoExpression(
-              bindName,
-              identifier,
-              exp,
-              statements
-            );
-            if (next !== undefined) {
-              return pre.concat(next);
-            }
-          default:
-            pre.push(cur);
+        if (ts.isVariableStatement(cur)) {
+          const declaration = cur.declarationList.declarations[0];
+          const identifier = declaration.name as ts.Identifier;
+          const exp = declaration.initializer!;
+          const next = visitGoExpression(bindName, identifier, exp, statements);
+          if (next !== undefined) {
+            return pre.concat(next);
+          }
         }
+        pre.push(cur);
         cur = statements.shift();
       }
       return pre;
