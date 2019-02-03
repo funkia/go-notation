@@ -37,6 +37,14 @@ describe("go-notation", () => {
     });
     assert.deepEqual(array, [1, 3, 1, 4, 2, 3, 2, 4]);
   });
+  it("handles named functions without arrow", () => {
+    const array = go(function baz(foobar) {
+      const a = foobar([1, 2]);
+      const b = foobar([3, 4]);
+      return [a, b];
+    });
+    assert.deepEqual(array, [1, 3, 1, 4, 2, 3, 2, 4]);
+  });
   it("does not mess with non-bind", () => {
     function foo(a: number) {
       return a;
