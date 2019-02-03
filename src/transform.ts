@@ -5,13 +5,13 @@ export default function transformer(): ts.TransformerFactory<ts.SourceFile> {
     return (file: ts.SourceFile) => ts.visitEachChild(file, visitor, context);
 
     function visitor(node: ts.Node): ts.VisitResult<ts.Node> {
-      switch (node.kind) {
-        case ts.SyntaxKind.CallExpression:
-          return visitCallExpression(<ts.CallExpression>node);
-        case ts.SyntaxKind.ImportDeclaration:
-          return visitImportDeclaration(<ts.ImportDeclaration>node);
+      if (ts.isCallExpression(node)) {
+        return visitCallExpression(node);
+      } else if (ts.isImportDeclaration(node)) {
+        return visitImportDeclaration(node);
+      } else {
+        return ts.visitEachChild(node, visitor, context);
       }
-      return ts.visitEachChild(node, visitor, context);
     }
 
     function visitImportDeclaration(node: ts.ImportDeclaration) {
@@ -26,11 +26,9 @@ export default function transformer(): ts.TransformerFactory<ts.SourceFile> {
         const arg0 = node.arguments[0];
         if (ts.isFunctionExpression(arg0) || ts.isArrowFunction(arg0)) {
           const bindName = arg0.parameters[0].getText();
-          const statements = arg0.body
-            .getChildAt(1)
-            .getChildren() as ts.Statement[];
+          const statements = (arg0.body as ts.FunctionBody).statements;
           return createImmediatelyInvokedFunction(
-            ts.createBlock(visitGoBody(bindName, statements))
+            ts.createBlock(visitGoBody(bindName, Array.from(statements)))
           );
         }
       }
@@ -65,21 +63,16 @@ export default function transformer(): ts.TransformerFactory<ts.SourceFile> {
       exp: ts.Expression,
       rest: ts.Statement[]
     ): ts.Statement[] | undefined {
-      switch (exp.kind) {
-        case ts.SyntaxKind.CallExpression:
-          if ((<ts.CallExpression>exp).expression.getText() === bindName) {
-            return [
-              ts.createReturn(
-                createFlatMapCall(
-                  (<ts.CallExpression>exp).arguments[0],
-                  identifier,
-                  ts.createBlock(visitGoBody(bindName, rest))
-                )
-              )
-            ];
-          }
-        default:
-          return undefined;
+      if (ts.isCallExpression(exp) && exp.expression.getText() === bindName) {
+        return [
+          ts.createReturn(
+            createFlatMapCall(
+              exp.arguments[0],
+              identifier,
+              ts.createBlock(visitGoBody(bindName, rest))
+            )
+          )
+        ];
       }
     }
   };
