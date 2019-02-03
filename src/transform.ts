@@ -97,13 +97,41 @@ export default function transformer(): ts.TransformerFactory<ts.SourceFile> {
             return (<ts.CallExpression>exp).arguments[0];
           }
         case ts.SyntaxKind.BinaryExpression:
-          const left = visitBindLine(bindName, exp.getChildAt(
-            0
-          ) as ts.Expression);
-          const right = visitBindLine(bindName, exp.getChildAt(
-            2
-          ) as ts.Expression);
-          if (left !== undefined && right !== undefined) {
+          const left = visitBindLine(bindName, <ts.Expression>(
+            exp.getChildAt(0)
+          ));
+          const right = visitBindLine(bindName, <ts.Expression>(
+            exp.getChildAt(2)
+          ));
+          if (left !== undefined && right === undefined) {
+            const leftId = ts.createUniqueName("bind");
+            return createFlatMapCall(
+              left,
+              leftId,
+              ts.createBlock([
+                ts.createReturn(
+                  ts.updateBinary(<ts.BinaryExpression>exp, leftId, <
+                    ts.Expression
+                  >exp.getChildAt(2))
+                )
+              ])
+            );
+          } else if (left === undefined && right !== undefined) {
+            const rightId = ts.createUniqueName("bind");
+            return createFlatMapCall(
+              right,
+              rightId,
+              ts.createBlock([
+                ts.createReturn(
+                  ts.updateBinary(
+                    <ts.BinaryExpression>exp,
+                    <ts.Expression>exp.getChildAt(0),
+                    rightId
+                  )
+                )
+              ])
+            );
+          } else if (left !== undefined && right !== undefined) {
             const leftId = ts.createUniqueName("bind");
             const rightId = ts.createUniqueName("bind");
             return createFlatMapCall(
