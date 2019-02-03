@@ -1,6 +1,6 @@
 {
   "name": "@funkia/go-notation",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Type-safe do-notation",
   "main": "dist/index.js",
   "module": "dist/es/index.js",
