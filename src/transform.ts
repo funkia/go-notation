@@ -64,20 +64,15 @@ export default function transformer(): ts.TransformerFactory<ts.SourceFile> {
               .getChildAt(1)
               .getChildAt(0);
             const identifier = line.getChildAt(0) as ts.Identifier;
-            const exp = visitBindLine(bindName, <ts.Expression>(
-              line.getChildAt(2)
-            ));
-            if (exp !== undefined) {
-              pre.push(
-                ts.createReturn(
-                  createFlatMapCall(
-                    exp,
-                    identifier,
-                    ts.createBlock(visitGoBody(bindName, statements), true)
-                  )
-                )
-              );
-              return pre;
+            const exp = <ts.Expression>line.getChildAt(2);
+            const next = visitGoExpression(
+              bindName,
+              identifier,
+              exp,
+              statements
+            );
+            if (next !== undefined) {
+              return pre.concat(next);
             }
           default:
             pre.push(cur);
@@ -87,77 +82,26 @@ export default function transformer(): ts.TransformerFactory<ts.SourceFile> {
       return pre;
     }
 
-    function visitBindLine(
+    function visitGoExpression(
       bindName: string,
-      exp: ts.Expression
-    ): ts.Expression | undefined {
+      identifier: ts.Identifier,
+      exp: ts.Expression,
+      rest: ts.Statement[]
+    ): ts.Statement[] | undefined {
       switch (exp.kind) {
         case ts.SyntaxKind.CallExpression:
-          if ((<ts.CallExpression>exp).expression.getText() === bindName) {
-            return (<ts.CallExpression>exp).arguments[0];
-          }
-        case ts.SyntaxKind.BinaryExpression:
-          const left = visitBindLine(bindName, <ts.Expression>(
-            exp.getChildAt(0)
-          ));
-          const right = visitBindLine(bindName, <ts.Expression>(
-            exp.getChildAt(2)
-          ));
-          if (left !== undefined && right === undefined) {
-            const leftId = ts.createUniqueName("bind");
-            return createFlatMapCall(
-              left,
-              leftId,
-              ts.createBlock([
-                ts.createReturn(
-                  ts.updateBinary(<ts.BinaryExpression>exp, leftId, <
-                    ts.Expression
-                  >exp.getChildAt(2))
-                )
-              ])
-            );
-          } else if (left === undefined && right !== undefined) {
-            const rightId = ts.createUniqueName("bind");
-            return createFlatMapCall(
-              right,
-              rightId,
-              ts.createBlock([
-                ts.createReturn(
-                  ts.updateBinary(
-                    <ts.BinaryExpression>exp,
-                    <ts.Expression>exp.getChildAt(0),
-                    rightId
-                  )
-                )
-              ])
-            );
-          } else if (left !== undefined && right !== undefined) {
-            const leftId = ts.createUniqueName("bind");
-            const rightId = ts.createUniqueName("bind");
-            return createFlatMapCall(
-              left,
-              leftId,
-              ts.createBlock([
-                ts.createReturn(
-                  createFlatMapCall(
-                    right,
-                    rightId,
-                    ts.createBlock([
-                      ts.createReturn(
-                        ts.updateBinary(
-                          <ts.BinaryExpression>exp,
-                          leftId,
-                          rightId
-                        )
-                      )
-                    ])
-                  )
-                )
-              ])
-            );
-          }
+          return [
+            ts.createReturn(
+              createFlatMapCall(
+                (<ts.CallExpression>exp).arguments[0],
+                identifier,
+                ts.createBlock(visitGoBody(bindName, rest))
+              )
+            )
+          ];
+        default:
+          return undefined;
       }
-      return undefined;
     }
   };
 }
