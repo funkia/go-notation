@@ -45,6 +45,14 @@ describe("go-notation", () => {
     });
     assert.deepEqual(array, [1, 3, 1, 4, 2, 3, 2, 4]);
   });
+  it("works with destructuring", () => {
+    const array = go(bind => {
+      const { a, b } = bind([{ a: 1, b: 2 }]);
+      const [c, d] = bind([[3, 4]]);
+      return [a + b + c + d];
+    });
+    assert.deepEqual(array, [10]);
+  });
   it("does not mess with non-bind", () => {
     function foo(a: number) {
       return a;
