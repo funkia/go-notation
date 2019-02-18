@@ -170,41 +170,43 @@ function normalizeExpression(
   bindName: string,
   exp: ts.Expression
 ): { pre: ts.Statement[]; exp: ts.Expression } {
-  if (ts.isCallExpression(exp)) {
-    const args = exp.arguments.map(a => normalizeExpression(bindName, a));
-    const pre = args.flatMap(a => a.pre);
-    const updatedExp = ts.updateCall(
-      exp,
-      exp.expression,
-      undefined,
-      args.map(a => a.exp)
-    );
-    const identifier = ts.createUniqueName("bind");
-    const dec = ts.createVariableStatement(
-      undefined,
-      ts.createVariableDeclarationList([
-        ts.createVariableDeclaration(identifier, undefined, updatedExp)
-      ])
-    );
-    return {
-      pre: pre.concat(dec),
-      exp: identifier
-    };
-  } else if (ts.isBinaryExpression(exp)) {
-    const left = normalizeExpression(bindName, exp.left);
-    const right = normalizeExpression(bindName, exp.right);
-    const updatedExp = ts.updateBinary(exp, left.exp, right.exp);
-    return {
-      pre: left.pre.concat(right.pre),
-      exp: updatedExp
-    };
-  } else if (ts.isParenthesizedExpression(exp)) {
-    const norm = normalizeExpression(bindName, exp.expression);
-    const updatedExp = ts.updateParen(exp, norm.exp);
-    return {
-      pre: norm.pre,
-      exp: updatedExp
-    };
+  if (exp.getText().includes(bindName)) {
+    if (ts.isCallExpression(exp)) {
+      const args = exp.arguments.map(a => normalizeExpression(bindName, a));
+      const pre = args.flatMap(a => a.pre);
+      const updatedExp = ts.updateCall(
+        exp,
+        exp.expression,
+        undefined,
+        args.map(a => a.exp)
+      );
+      const identifier = ts.createUniqueName("bind");
+      const dec = ts.createVariableStatement(
+        undefined,
+        ts.createVariableDeclarationList([
+          ts.createVariableDeclaration(identifier, undefined, updatedExp)
+        ])
+      );
+      return {
+        pre: pre.concat(dec),
+        exp: identifier
+      };
+    } else if (ts.isBinaryExpression(exp)) {
+      const left = normalizeExpression(bindName, exp.left);
+      const right = normalizeExpression(bindName, exp.right);
+      const updatedExp = ts.updateBinary(exp, left.exp, right.exp);
+      return {
+        pre: left.pre.concat(right.pre),
+        exp: updatedExp
+      };
+    } else if (ts.isParenthesizedExpression(exp)) {
+      const norm = normalizeExpression(bindName, exp.expression);
+      const updatedExp = ts.updateParen(exp, norm.exp);
+      return {
+        pre: norm.pre,
+        exp: updatedExp
+      };
+    }
   }
   return { pre: [], exp };
 }
